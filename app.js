@@ -2,6 +2,7 @@ const express = require("express");
 const passport = require("./auth.js");
 const CalendarService = require("./calendar.service");
 const app = express();
+const logger = require("morgan");
 const session = require("express-session");
 
 // Add session middleware
@@ -17,6 +18,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use(logger("dev"));
 
 app.get("/login", passport.authenticate("microsoft"));
 app.get(
@@ -58,7 +61,7 @@ app.get("/calendar", async (req, res) => {
     const eventId = "event-id-here";
     const attendee = {
       emailAddress: {
-        address: "new-attendee@example.com",
+        address: "pranavkcse@gmail.com",
         name: "New Attendee",
       },
       type: "required",
