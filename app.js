@@ -2,16 +2,26 @@ const express = require("express");
 const passport = require("./auth.js");
 const CalendarService = require("./calendar.service");
 const app = express();
+const session = require("express-session");
+
+// Add session middleware
+app.use(
+  session({
+    secret: "your_session_secret", // Replace with a real secret
+    resave: false,
+    saveUninitialized: false,
+  }),
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get("/login", passport.authenticate("microsoft-graph"));
+app.get("/login", passport.authenticate("microsoft"));
 app.get(
   "/callback",
-  passport.authenticate("microsoft-graph", {
+  passport.authenticate("microsoft", {
     successRedirect: "/calendar",
     failureRedirect: "/login",
   }),

@@ -3,6 +3,7 @@ const MicrosoftGraphStrategy = require("passport-microsoft").Strategy;
 require("dotenv").config();
 
 passport.use(
+  "microsoft",
   new MicrosoftGraphStrategy(
     {
       clientID: process.env.MICROSOFT_APP_ID,
