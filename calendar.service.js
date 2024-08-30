@@ -14,9 +14,13 @@ class CalendarService {
   }
 
   async addAttendee(eventId, attendee) {
+    const res = await this.client.api("/me/events/"+eventId).get();
+
     return await this.client
-      .api(`/me/events/${eventId}/attendees`)
-      .post(attendee);
+      .api(`/me/events/${eventId}`)
+      .patch({
+        attendees: [attendee, ...res.attendees]
+      });
   }
 
   async deleteEvent(eventId) {

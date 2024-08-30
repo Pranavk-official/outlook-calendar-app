@@ -4,6 +4,8 @@ const CalendarService = require("./calendar.service");
 const app = express();
 const logger = require("morgan");
 const session = require("express-session");
+const refresh = require('passport-oauth2-refresh');
+
 
 // Add session middleware
 app.use(
@@ -23,49 +25,72 @@ app.use(logger("dev"));
 
 app.get("/login", passport.authenticate("microsoft"));
 app.get(
-  "/callback",
+  "/auth",
   passport.authenticate("microsoft", {
-    successRedirect: "/calendar",
     failureRedirect: "/login",
-  }),
+  }),  function (req, res) {
+    console.log(req.user)
+    res.redirect('/success');
+  }
 );
 
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) { return next(); }
+  res.redirect('/login');
+}
+app.get("/success", ensureAuthenticated, function (req, res) {
+  res.send(JSON.stringify(req.user))
+})
+
+app.get("/refresh", (res, req)=> {
+  refresh.requestNewAccessToken(
+    'facebook',
+    req.user.refreshToken,
+    function (err, accessToken, refreshToken) {
+      req.user.accessToken = accessToken;
+      req.user.refreshToken = refreshToken;
+      res.send(accessToken, refreshToken)
+    },
+  );
+})
+
 app.get("/calendar", async (req, res) => {
+  console.log(req.user)
   if (req.user && req.user.accessToken) {
     const calendarService = new CalendarService(req.user.accessToken);
-
+    const attendee = {
+      emailAddress: {
+        address: "rajatxmathew@gmail.com",
+        name: "New Attendee",
+      },
+      type: "required",
+    };
     // Create an event
     const event = {
       subject: "Team Meeting",
       start: {
-        dateTime: "2023-07-15T10:00:00",
+        dateTime: "2024-09-15T10:00:00",
         timeZone: "UTC",
       },
       end: {
-        dateTime: "2023-07-15T11:00:00",
+        dateTime: "2024-09-15T11:00:00",
         timeZone: "UTC",
       },
       attendees: [
         {
           emailAddress: {
-            address: "attendee@example.com",
+            address: "rajatmathew10@outlook.com",
             name: "Attendee Name",
           },
           type: "required",
         },
+        // attendee
       ],
     };
-    await calendarService.createEvent(event);
-
+    const response = await calendarService.createEvent(event);
     // Add an attendee to an event
-    const eventId = "event-id-here";
-    const attendee = {
-      emailAddress: {
-        address: "pranavkcse@gmail.com",
-        name: "New Attendee",
-      },
-      type: "required",
-    };
+    const eventId = response.id;
+
     await calendarService.addAttendee(eventId, attendee);
 
     // Delete an event
